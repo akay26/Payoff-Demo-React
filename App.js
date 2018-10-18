@@ -1,14 +1,104 @@
 import React from 'react';
-import { StyleSheet, Text, Alert, Image, View, TouchableOpacity, TextInput, Picker, FlatList, ActivityIndicator, Animated } from 'react-native';
-import { Icon, Button, Input, Badge, Card, ListItem, FormValidationMessage } from 'react-native-elements';
+import { StyleSheet, ScrollView, Text, Button, Alert, Image, View, TouchableOpacity, TextInput, Picker, FlatList, ActivityIndicator, Animated } from 'react-native';
+import { Icon, Input, Badge, Card, ListItem, FormValidationMessage, CheckBox } from 'react-native-elements';
 import { createStackNavigator } from 'react-navigation';
 
+
+class BeforeHomeScreen extends React.Component {
+
+  constructor(props) {
+    super(props);
+
+    this.state = { email: '', password:'', isLoading: true };
+  }
+
+   
+
+  handlePress = async () => {
+    fetch('http://192.168.0.8:3000/tasks', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        "name": this.state.email,
+        }
+      )
+    }).then((response) => response.json())
+      .then((responseJson) => {
+        Alert.alert("Confirm that" +' '+'Your email is'+' '+responseJson.name);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+    
+  }
+
+
+
+  render() {
+  
+ 
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: 'white'}}>
+        <Text>PayOff</Text>
+
+        <Icon
+          name='sc-telegram'
+          type='evilicon'
+          color='#517fa4'
+
+        />
+
+        <Text>Enter Email to Continue</Text>
+
+         <TextInput
+          placeholder='Your Email!'
+          placeholderTextColor="#000"
+          errorStyle={{color:'red'}}
+          style={{ height: 40, width: 120, borderColor: 'black' }}
+          onChangeText={(email) => this.setState({ email })}     
+          // onChangeText={(text4) => this.validateEmail(text4)}
+          value={this.state.email}
+        />
+        {/* <TextInput
+          placeholder='Password'
+          placeholderTextColor="#000"
+          errorStyle={{color:'red'}}
+          style={{ height: 40, width: 120, borderColor: 'black' }}
+          onChangeText={(email) => this.setState({ email })}     
+          // onChangeText={(text4) => this.validateEmail(text4)}
+          value={this.state.email}
+        /> */}
+       
+        <Button disabled={false}
+          title='LETS GO'
+          onPress={() =>
+            this.handlePress.bind(this)
+            // this.props.navigation.navigate('Home', {name: this.state.email})
+          }
+          onPress={() =>
+            // this.handlePress.bind(this)
+            this.props.navigation.navigate('Home', {name: this.state.email})
+          }
+        />
+      </View>
+    );
+  }
+}
 
 class HomeScreen extends React.Component {
 
   constructor(props) {
     super(props);
+
     this.state = { text: '', text2: '', text3: '', text4:'', isLoading: true };
+    
+    this.state.shouldDisablePostButton = true;
+
+    if (this.state.text4!=undefined) {
+      this.state.shouldDisablePostButton = false;
+    }
   }
 
   componentDidMount() {
@@ -16,7 +106,8 @@ class HomeScreen extends React.Component {
     return fetch(localApiUrl)
       .then((response) => response.json())
       .then((responseJson) => {
-        console.log(this.state.response)
+          this.state.shouldDisablePostButton = true;console.log(this.state.response
+        )
         this.setState({
           isLoading: false,
           dataSource: responseJson,
@@ -32,6 +123,20 @@ class HomeScreen extends React.Component {
 
   }
   
+  validateEmail = (text4) => {
+    let reg = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/ ;
+    if(reg.test(text4) === false)
+    {
+    // Alert.alert("Email is Not Correct");
+    this.setState({email:this.state.text4})
+    Alert.alert("Email is Not Correct");
+    // return false;
+      }
+    else {
+      this.setState({email:this.state.text4})
+
+    }
+    }
 
   handlePress = async () => {
     fetch('http://192.168.0.8:3000/tasks', {
@@ -40,7 +145,7 @@ class HomeScreen extends React.Component {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        "name": this.state.text4,
+        // "name": this.state.text4,
         "amount": this.state.text2,
         "totaldebt": this.state.text,
         "months" :this.state.text3
@@ -53,6 +158,7 @@ class HomeScreen extends React.Component {
       .catch((error) => {
         console.error(error);
       });
+      this.setState({checked: !this.state.checked})
   }
 
 
@@ -64,7 +170,7 @@ class HomeScreen extends React.Component {
   
  
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center'}}>
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: 'white'}}>
         <Text>PayOff</Text>
 
         <Icon
@@ -74,7 +180,8 @@ class HomeScreen extends React.Component {
 
         />
 
-        <Text>Calculate your pay off pattern below</Text>
+        <Text>Hi {this.props.navigation.state.params.name} !
+        Calculate your pay off pattern below</Text>
 
          <TextInput
           placeholder='Your Email!'
@@ -84,6 +191,16 @@ class HomeScreen extends React.Component {
           style={{ height: 40, width: 120, borderColor: 'black' }}
           type='numeric'
           onChangeText={(text4) => this.setState({ text4 })}
+
+
+
+
+
+
+
+
+
+          // onChangeText={(text4) => this.validateEmail(text4)}
           value={this.state.text4}
         />
 
@@ -115,12 +232,23 @@ class HomeScreen extends React.Component {
           value={this.state.text3}
         />
 
-        <Text>Please click link below to confirm before calculating</Text>
-        <TouchableOpacity onPress={this.handlePress.bind(this)}><Text style={{paddingTop: 20, paddingBottom: 20, color: '#F08080'}}> Confirm Your payment plan </Text></TouchableOpacity>
+        <Text>Please confirm before calculating</Text>
+        {/* <TouchableOpacity onPress={this.handlePress.bind(this)}><Text style={{paddingTop: 20, paddingBottom: 20, color: '#F08080'}}> Confirm Your payment plan </Text></TouchableOpacity> */}
+        <CheckBox
+         center
+         title='Confirm Your payment plan'
+         checkedIcon='dot-circle-o'
+          uncheckedIcon='circle-o'
+        checked={this.state.checked}
+        onPress={this.handlePress.bind(this)}
+        // onPress={() => this.setState({checked: !this.state.checked})}
 
+
+        />
         <Button disabled={false}
           title='CALCULATE'
           onPress={() =>
+
             this.props.navigation.navigate('Details', {name: this.state.text4})
           }
         />
@@ -174,7 +302,7 @@ class DetailsScreen extends React.Component {
   formData: {} })
   .then((response) => response.json())
   .then((responseJson) => {
-    Alert.alert("Are you sure you want to remove summary?");
+    // Alert.alert("Are you sure you want go to home Page and Recalulate?");
   })
   .catch((error) => {
     console.error(error);
@@ -195,14 +323,25 @@ filterData(nameKey, myArray){
   
   renderItem = ({ item }) => (
     
-    <ListItem
-      title={item.name+' '+'Your Monthly Payment Choice is $'+' '+item.amount}
-      subtitle={item.name+' '+'You should pay $'+' '+(((item.totaldebt - (item.amount*item.months))/item.months))+' '+'more each month'}
-      leftAvatar={{
-        source: item.avatar_url && { uri: item.avatar_url },
-        title: item.name[0]
-      }}
-    />
+    <Card
+              title={item.name+' '+'Your Monthly Payment Choice is $'+' '+item.amount}
+              // title={null}
+              // image={{ uri: "http://via.placeholder.com/160x160" }}
+              containerStyle={{ padding: 10, width: 325, height: 200 }}
+            >
+              <Text style={{ marginBottom: 200 }}>
+                {'You should pay $'+' '+(((item.totaldebt - (item.amount*item.months))/item.months))+' '+'more each month'}
+              </Text>
+            </Card>
+
+    // <ListItem
+    //   title={item.name+' '+'Your Monthly Payment Choice is $'+' '+item.amount}
+    //   subtitle={item.name+' '+'You should pay $'+' '+(((item.totaldebt - (item.amount*item.months))/item.months))+' '+'more each month'}
+    //   leftAvatar={{
+    //     source: item.avatar_url && { uri: item.avatar_url },
+    //     title: item.name[0]
+    //   }}
+    // />
   )
 
 
@@ -221,6 +360,8 @@ filterData(nameKey, myArray){
         </View>
       )
     }
+
+   
     return (
       <View style={{ flex: 1, justifyContent: 'center' }}>
       <Icon
@@ -231,7 +372,7 @@ filterData(nameKey, myArray){
         />
 
          <Button disabled={false}
-          title='Remove My Summary'
+          title='Remove Calculation'
           // onPress={() =>
           //   this.props.navigation.navigate('Home')
           // }
@@ -259,11 +400,12 @@ filterData(nameKey, myArray){
 }
 
 const RootStack = createStackNavigator({
+  BeforeHome: BeforeHomeScreen,
   Home: HomeScreen,
-  Details: DetailsScreen,
+  Details: DetailsScreen
 },
   {
-    initialRouteName: 'Home',
+    initialRouteName: 'BeforeHome',
   }
 );
 
